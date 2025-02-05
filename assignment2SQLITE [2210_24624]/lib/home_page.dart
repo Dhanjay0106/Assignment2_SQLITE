@@ -28,7 +28,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
   }
 
   void _clearFields() {
@@ -42,9 +41,8 @@ class _HomePageState extends State<HomePage> {
 
   bool _parseAvailability(String value) {
     value = value.toLowerCase().trim();
-    return value == 'yes'; // Returns true for 'yes', false otherwise
+    return value == 'yes';
   }
-
 
   void _showErrorDialog(String message) {
     showDialog(
@@ -55,9 +53,7 @@ class _HomePageState extends State<HomePage> {
           content: Text(message),
           actions: <Widget>[
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: Text("OK"),
             ),
           ],
@@ -71,28 +67,24 @@ class _HomePageState extends State<HomePage> {
     String roomPrice = _roomPriceController.text;
     String roomAvailability = _roomAvailabilityController.text;
 
-    // Check if any field is empty and show a dialog
     if (roomType.isEmpty || roomPrice.isEmpty || roomAvailability.isEmpty) {
       _showErrorDialog("All fields are mandatory.");
       return false;
     }
 
-    // Room Type Validation: Alphabets only and max 30 characters
     if (roomType.isEmpty || !RegExp(r'^[a-zA-Z\s]+$').hasMatch(roomType) || roomType.length > 30) {
-      _showErrorDialog("Room type must be alphabetic and less than or equal to 30 characters.");
+      _showErrorDialog("Room type must be alphabetic and ≤ 30 characters.");
       return false;
     }
 
-    // Price Validation: Must be a number greater than 0 and max 6 digits
     double price = double.tryParse(roomPrice) ?? 0.0;
-    if (roomPrice.isEmpty || price <= 0 || roomPrice.length > 6) {
-      _showErrorDialog("Price must be a positive number with no more than 6 digits.");
+    if (price <= 0 || roomPrice.length > 6) {
+      _showErrorDialog("Price must be a positive number with ≤ 6 digits.");
       return false;
     }
 
-    // Availability Validation: Must be "yes" or "no"
-    String availability = _roomAvailabilityController.text.toLowerCase().trim();
-    if (availability.isEmpty || (availability != 'yes' && availability != 'no')) {
+    String availability = roomAvailability.toLowerCase().trim();
+    if (availability != 'yes' && availability != 'no') {
       _showErrorDialog("Availability must be 'yes' or 'no'.");
       return false;
     }
@@ -135,74 +127,61 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _deleteRoom(int id) async {
-    await _localDB.deleteRoom(id);
-    _clearFields();
-    setState(() {}); // Refresh room list
-    showDialog(
-      context: context,
-      builder: (context) => SuccessDialog(message: "Room deleted successfully!"),
-    );
+  void _deleteSelectedRoom() async {
+    if (_selectedRoomId != null) {
+      await _localDB.deleteRoom(_selectedRoomId!);
+      _clearFields();
+      setState(() {}); // Refresh room list
+      showDialog(
+        context: context,
+        builder: (context) => SuccessDialog(message: "Room deleted successfully!"),
+      );
+    }
   }
 
   List<Map<String, dynamic>> _sortRooms(List<Map<String, dynamic>> rooms) {
-    // Clone the list to avoid modifying the original
     List<Map<String, dynamic>> sortedRooms = List.from(rooms);
 
     switch (_selectedSortOption) {
       case 'price_high_low':
-        sortedRooms.sort((a, b) =>
-            (b['price'] as double).compareTo(a['price'] as double));
+        sortedRooms.sort((a, b) => (b['price'] as double).compareTo(a['price'] as double));
         break;
       case 'price_low_high':
-        sortedRooms.sort((a, b) =>
-            (a['price'] as double).compareTo(b['price'] as double));
+        sortedRooms.sort((a, b) => (a['price'] as double).compareTo(b['price'] as double));
         break;
       case 'name_asc':
-        sortedRooms.sort((a, b) =>
-            (a['type'] as String).compareTo(b['type'] as String));
+        sortedRooms.sort((a, b) => (a['type'] as String).compareTo(b['type'] as String));
         break;
       case 'name_desc':
-        sortedRooms.sort((a, b) =>
-            (b['type'] as String).compareTo(a['type'] as String));
+        sortedRooms.sort((a, b) => (b['type'] as String).compareTo(a['type'] as String));
         break;
       case 'available_first':
-        sortedRooms.sort((a, b) =>
-            (b['availability'] as int).compareTo(a['availability'] as int));
+        sortedRooms.sort((a, b) => (b['availability'] as int).compareTo(a['availability'] as int));
         break;
       case 'occupied_first':
-        sortedRooms.sort((a, b) =>
-            (a['availability'] as int).compareTo(b['availability'] as int));
+        sortedRooms.sort((a, b) => (a['availability'] as int).compareTo(b['availability'] as int));
         break;
     }
     return sortedRooms;
   }
 
-    String _getSortOptionText(String value) {
+  String _getSortOptionText(String value) {
     switch (value) {
-      case 'price_high_low':
-        return 'Price: High to Low';
-      case 'price_low_high':
-        return 'Price: Low to High';
-      case 'name_asc':
-        return 'Name: A-Z';
-      case 'name_desc':
-        return 'Name: Z-A';
-      case 'available_first':
-        return 'Available First';
-      case 'occupied_first':
-        return 'Occupied First';
-      default:
-        return 'Sort By';
+      case 'price_high_low': return 'Price: High to Low';
+      case 'price_low_high': return 'Price: Low to High';
+      case 'name_asc': return 'Name: A-Z';
+      case 'name_desc': return 'Name: Z-A';
+      case 'available_first': return 'Available First';
+      case 'occupied_first': return 'Occupied First';
+      default: return 'Sort By';
     }
   }
-  // ... [Keep _getSortOptionText, _getAvailabilityColor, _buildHoverButton methods] ...
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(" Omar Hotel Room Management- SQLITE", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        title: Text("Omar Hotel Room Management- SQLITE", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
@@ -217,7 +196,6 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Form Title
                     Center(
                       child: Text(
                         "Room Details Form",
@@ -229,14 +207,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(height: 12),
-
-                    // Display the Room ID field as a read-only field
                     if (_selectedRoomId != null)
-                      Text("Room ID: $_selectedRoomId",
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      Text("Room ID: $_selectedRoomId", style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 8),
-
-                    // Rest of the form fields
                     TextField(
                       controller: _roomTypeController,
                       decoration: InputDecoration(
@@ -270,8 +243,10 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         if (_selectedRoomId == null)
                           _buildHoverButton("Create", Colors.green, Icons.add, _createRoom),
-                        if (_selectedRoomId != null)
+                        if (_selectedRoomId != null) ...[
                           _buildHoverButton("Update", Colors.orange, Icons.update, _updateRoom),
+                          _buildHoverButton("Delete", Colors.red, Icons.delete, _deleteSelectedRoom),
+                        ],
                       ],
                     ),
                     SizedBox(height: 8),
@@ -281,10 +256,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 16),
-
-            SizedBox(height: 16),
-
-            // Header and Sorting Controls
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
               child: Row(
@@ -302,25 +273,15 @@ class _HomePageState extends State<HomePage> {
                     value: _selectedSortOption,
                     icon: Icon(Icons.sort, color: Colors.blueAccent),
                     underline: Container(height: 0),
-                    items: _sortOptions.map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(
-                          _getSortOptionText(value),
-                          style: TextStyle(color: Colors.blueGrey),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedSortOption = newValue!;
-                      });
-                    },
+                    items: _sortOptions.map((String value) => DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(_getSortOptionText(value), style: TextStyle(color: Colors.blueGrey)),
+                    )).toList(),
+                    onChanged: (String? newValue) => setState(() => _selectedSortOption = newValue!),
                   ),
                 ],
               ),
             ),
-
             SizedBox(height: 8),
             Expanded(
               child: FutureBuilder<List<Map<String, dynamic>>>(
@@ -348,17 +309,11 @@ class _HomePageState extends State<HomePage> {
                               color: _getAvailabilityColor(isAvailable), size: 36),
                           title: Text(room['type'], style: TextStyle(fontWeight: FontWeight.bold)),
                           subtitle: Text("Price: Rs${room['price']} - ${isAvailable ? 'Available' : 'Not Available'}"),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteRoom(roomId),
-                          ),
                           onTap: () {
                             _roomTypeController.text = room['type'];
                             _roomPriceController.text = room['price'].toString();
                             _roomAvailabilityController.text = isAvailable ? 'Yes' : 'No';
-                            setState(() {
-                              _selectedRoomId = roomId;
-                            });
+                            setState(() => _selectedRoomId = roomId);
                           },
                         ),
                       );
@@ -372,38 +327,36 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-}
-Color _getAvailabilityColor(bool isAvailable) {
-  return isAvailable ? Colors.green : Colors.redAccent;
-}
-Widget _buildHoverButton(String text, Color color, IconData icon, VoidCallback onPressed) {
-  return InkWell(
-    onTap: onPressed,
-    child: AnimatedContainer(
-      duration: Duration(milliseconds: 200),
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 3)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white),
-          SizedBox(width: 8),
-          Text(text, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    ),
-  );
-}
 
+  Widget _buildHoverButton(String text, Color color, IconData icon, VoidCallback onPressed) {
+    return InkWell(
+      onTap: onPressed,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 3))],
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.white),
+            SizedBox(width: 8),
+            Text(text, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getAvailabilityColor(bool isAvailable) {
+    return isAvailable ? Colors.green : Colors.redAccent;
+  }
+}
 
 class SuccessDialog extends StatelessWidget {
   final String message;
-
   const SuccessDialog({Key? key, required this.message}) : super(key: key);
 
   @override
@@ -411,11 +364,9 @@ class SuccessDialog extends StatelessWidget {
     return AlertDialog(
       title: Text("Success"),
       content: Text(message),
-      actions: <Widget>[
+      actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           child: Text("OK"),
         ),
       ],
